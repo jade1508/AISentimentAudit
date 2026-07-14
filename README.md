@@ -1,14 +1,12 @@
-🧠 Sentiment Audit — An AI That Audits Another AI
+# 🧠 Sentiment Audit — An AI That Audits Another AI
 
+> Built an AI to audit another AI, to avoid a blind love for bots 🤖
 
-Built an AI to audit another AI, to avoid a blind love for bots 🤖
+Automated sentiment pipelines are fast, scalable, and efficient — until they hallucinate, misread context, and quietly corrupt your master database. This project adds an independent **AI Auditor** as a meta-analysis guardrail on top of a primary sentiment-analysis pipeline, catching logical contradictions between a review's star rating and its AI-assigned sentiment label — automatically, in real time, with zero human intervention.
 
+## 📐 Architecture
 
-
-Automated sentiment pipelines are fast, scalable, and efficient — until they hallucinate, misread context, and quietly corrupt your master database. This project adds an independent AI Auditor as a meta-analysis guardrail on top of a primary sentiment-analysis pipeline, catching logical contradictions between a review's star rating and its AI-assigned sentiment label — automatically, in real time, with zero human intervention.
-
-📐 Architecture
-
+```
 customer_reviews (Google Sheets)
         │
         ▼
@@ -42,39 +40,43 @@ customer_reviews (Google Sheets)
         │
         ▼
   Google Sheets → audit_dashboard (Add a Row)
+```
 
-🔁 How It Works
+## 🔁 How It Works
 
-1️⃣ The Trigger
-The moment the primary pipeline logs a new sentiment result into the product_sentiment sheet, a Google Apps Script onEdit(e) trigger fires and posts the row's data as JSON to a Make webhook — instantly waking up the Auditor scenario.
+**1️⃣ The Trigger**
+The moment the primary pipeline logs a new sentiment result into the `product_sentiment` sheet, a Google Apps Script `onEdit(e)` trigger fires and posts the row's data as JSON to a Make webhook — instantly waking up the Auditor scenario.
 
-2️⃣ The Logic Audit
-Rather than re-parsing the full review text, the Auditor cross-checks data logic: it maps the original numeric reviews.rating (1–5 stars) against the ai_sentiment label the primary model assigned. A 5-star review tagged "Negative," or a 1-star review tagged "Positive," is a contradiction — a strong signal the primary model misjudged context or sarcasm.
+**2️⃣ The Logic Audit**
+Rather than re-parsing the full review text, the Auditor cross-checks *data logic*: it maps the original numeric `reviews.rating` (1–5 stars) against the `ai_sentiment` label the primary model assigned. A 5-star review tagged "Negative," or a 1-star review tagged "Positive," is a contradiction — a strong signal the primary model misjudged context or sarcasm.
 
-3️⃣ The Risk Governance
-The Auditor is a Groq-hosted Llama 3.3 70B model, prompted to return strict JSON only. It outputs:
+**3️⃣ The Risk Governance**
+The Auditor is a Groq-hosted Llama 3.3 70B model, prompted to return **strict JSON only**. It outputs:
+- `asin` — the exact product ASIN
+- `discrepancy_detected` — `"Yes"` / `"No"`
+- `confidence_score` — 0–100
+- `data_integrity_risk` — `High` / `Medium` / `Low`
+- `explanation` — one-sentence rationale
 
+The result is written to a dedicated `audit_dashboard` sheet, giving the team a running log of every AI decision and every place the primary model's judgment should be double-checked.
 
-asin — the exact product ASIN
-discrepancy_detected — "Yes" / "No"
-confidence_score — 0–100
-data_integrity_risk — High / Medium / Low
-explanation — one-sentence rationale
+## 🧪 Example: Caught in Testing
 
+During a stress test, the primary pipeline mislabeled a 5-star **Amazon Echo Dot Case** review as "Negative." The Auditor intercepted it on the next webhook call, flagged `data_integrity_risk: "High"`, and logged the exact reasoning — without any human reviewing the data first.
 
-The result is written to a dedicated audit_dashboard sheet, giving the team a running log of every AI decision and every place the primary model's judgment should be double-checked.
+## 🛠️ Stack
 
-🧪 Example: Caught in Testing
+| Component            | Role                                                             |
+|-----------------------|-------------------------------------------------------------------|
+| Google Sheets          | Source data (`customer_reviews`), sentiment output, audit log     |
+| Make (Integromat)      | Orchestrates both scenarios (Product Sentiment + Sentiment Audit) |
+| Google Apps Script     | `onEdit` trigger → webhook, event-driven handoff between scenarios |
+| Groq (Llama 3.3 70B)   | Powers both the primary sentiment classifier and the Auditor      |
 
-During a stress test, the primary pipeline mislabeled a 5-star Amazon Echo Dot Case review as "Negative." The Auditor intercepted it on the next webhook call, flagged data_integrity_risk: "High", and logged the exact reasoning — without any human reviewing the data first.
+## 📄 Google Apps Script — Webhook Trigger
 
-🛠️ Stack
-
-ComponentRoleGoogle SheetsSource data (customer_reviews), sentiment output, audit logMake (Integromat)Orchestrates both scenarios (Product Sentiment + Sentiment Audit)Google Apps ScriptonEdit trigger → webhook, event-driven handoff between scenariosGroq (Llama 3.3 70B)Powers both the primary sentiment classifier and the Auditor
-
-📄 Google Apps Script — Webhook Trigger
-
-javascriptfunction auditOnEdit(e) {
+```javascript
+function auditOnEdit(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
   // Only trigger when new data is added to 'product_sentiment'
   if (sheet.getName() == "product_sentiment") {
@@ -100,15 +102,14 @@ javascriptfunction auditOnEdit(e) {
     UrlFetchApp.fetch(url, options);
   }
 }
+```
 
+> ⚠️ Replace the webhook URL with your own Make scenario's webhook endpoint before deploying.
 
-⚠️ Replace the webhook URL with your own Make scenario's webhook endpoint before deploying.
+## 🤖 Auditor Prompt (Groq / Llama 3.3)
 
-
-
-🤖 Auditor Prompt (Groq / Llama 3.3)
-
-json{
+```json
+{
   "model": "llama-3.3-70b-versatile",
   "messages": [
     {
@@ -122,21 +123,24 @@ json{
   ],
   "response_format": { "type": "json_object" }
 }
+```
 
-📊 Data Source
+## 📊 Data Source
 
-Reviews are sourced from a customer_reviews sheet (Amazon consumer electronics product reviews — e.g. Kindle Paperwhite, Echo Dot Case, Fire TV Game Controller, Fire HD 10 Tablet), with columns for asins, name, reviews.rating, reviews.text, and related metadata.
+Reviews are sourced from a `customer_reviews` sheet (Amazon consumer electronics product reviews — e.g. Kindle Paperwhite, Echo Dot Case, Fire TV Game Controller, Fire HD 10 Tablet), with columns for `asins`, `name`, `reviews.rating`, `reviews.text`, and related metadata.
 
-🚀 Setup
+## 🚀 Setup
 
+1. Import both Make blueprints (`Product Sentiment` and `Sentiment Audit`) into your Make account.
+2. Connect your Google Sheets account and point each module to your own spreadsheet/sheet tabs (`product_sentiment`, `check_by_teams`, `audit_dashboard`).
+3. Add your Groq API key to the Make Groq/HTTP module.
+4. Copy the Apps Script above into the Script Editor of your `product_sentiment` spreadsheet, update the webhook URL, and set an installable `onEdit` trigger.
+5. Run a test edit on `product_sentiment` and confirm a new row appears in `audit_dashboard`.
 
-Import both Make blueprints (Product Sentiment and Sentiment Audit) into your Make account.
-Connect your Google Sheets account and point each module to your own spreadsheet/sheet tabs (product_sentiment, check_by_teams, audit_dashboard).
-Add your Groq API key to the Make Groq/HTTP module.
-Copy the Apps Script above into the Script Editor of your product_sentiment spreadsheet, update the webhook URL, and set an installable onEdit trigger.
-Run a test edit on product_sentiment and confirm a new row appears in audit_dashboard.
+## 📺 Video Walkthrough
 
+Full step-by-step technical walkthrough (webhooks, prompt structure, data mapping): **[Insert Your YouTube Video Link Here]**
 
-📺 Video Walkthrough
+## 🏷️ Tags
 
-Full step-by-step technical walkthrough (webhooks, prompt structure, data mapping): [Insert Your YouTube Video Link Here]
+`#Automation` `#GenerativeAI` `#DataIntegrity` `#MakeCom` `#LLM` `#Groq` `#DataQuality`
