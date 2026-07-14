@@ -127,7 +127,7 @@ function auditOnEdit(e) {
 
 ## 📊 Data Source
 
-Reviews are sourced from a `customer_reviews` sheet (Amazon consumer electronics product reviews — e.g. Kindle Paperwhite, Echo Dot Case, Fire TV Game Controller, Fire HD 10 Tablet), with columns for `asins`, `name`, `reviews.rating`, `reviews.text`, and related metadata.
+[Link to the dataset and worksheet](https://docs.google.com/spreadsheets/d/1LKli030SsKQP1ghFv1UotYo_QMKjlC9JDXPsF5fTIF4/edit?usp=sharing)
 
 ## 🚀 Setup
 
@@ -136,6 +136,10 @@ Reviews are sourced from a `customer_reviews` sheet (Amazon consumer electronics
 3. Add your Groq API key to the Make Groq/HTTP module.
 4. Copy the Apps Script above into the Script Editor of your `product_sentiment` spreadsheet, update the webhook URL, and set an installable `onEdit` trigger.
 5. Run a test edit on `product_sentiment` and confirm a new row appears in `audit_dashboard`.
+
+<img width="1515" height="366" alt="image" src="https://github.com/user-attachments/assets/cd39f425-76f5-47e1-97cb-d945794edd1d" />
+
+<img width="1623" height="444" alt="image" src="https://github.com/user-attachments/assets/962c5038-651f-4b2d-b4cb-3ba89a7707cf" />
 
 ## 📺 Video Walkthrough
 
