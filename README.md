@@ -143,7 +143,7 @@ function auditOnEdit(e) {
 
 ## 📺 Video Walkthrough
 
-Full step-by-step technical walkthrough (webhooks, prompt structure, data mapping): **[Insert Your YouTube Video Link Here]**
+Full step-by-step technical walkthrough (webhooks, prompt structure, data mapping): **(https://youtu.be/X_KmyjxA4VQ)**
 
 ## 🏷️ Tags
 
